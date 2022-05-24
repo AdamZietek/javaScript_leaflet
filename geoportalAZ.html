@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+        #map{position: absolute; top: 0; bottom: 0; left: 0; right: 0;}
+    </style>
+    <title>Geoportal</title>
+    <meta charset="UTF-8">
+    <script src="test.js"></script>
+    <script src="rezerwaty.js"></script>
+    <script src="bouncemarker.js"></script>
+</head>
+<body>
+<div id="map"></div>
+    <script>
+        var map = L.map('map').setView([51.9833, 19.4667], 6);
+        var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}',{foo:'bar'});
+        
+    	//warstwa WMS KIEG
+		var kieg = L.tileLayer.wms('https://{s}.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow?', {
+			subdomains: ['integracja01','integracja02'],
+			layers: 'dzialki,numery_dzialek,budynki',
+			transparent: 'true',
+			minZoom: 12,
+			format: 'image/png',
+			tileSize: 1024,
+			attribution: 'GUGiK'
+		})
+		
+		//warstwa WMS KIUT
+		var kiut = L.tileLayer.wms('https://{s}.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu?', {
+			subdomains: ['integracja01','integracja02'],
+			layers: 'przewod_wodociagowy,przewod_gazowy',
+			transparent: 'true',
+			minZoom: 10,
+			format: 'image/png',
+			tileSize: 1024,
+			attribution: 'GUGiK'
+		})
+        
+        var nmt = L.tileLayer.wms('https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WMS/ShadedRelief', {
+            layers: 'Raster'
+        });
+        osm.addTo(map);
+
+        var polygonsWithCenters = L.layerGroup();
+        var rezerwaty_polygon = L.geoJSON(rezerw, {
+            onEachFeature: oEF
+        });
+
+        var baseLayers = {  "OpenStreetMap": osm,
+                            "NMT": nmt
+        };
+        
+        var overlays = {"Rezerwaty": polygonsWithCenters,
+                        "Budynki i działki": kieg,
+		                "Uzbrojenie terenu": kiut
+        };
+
+        L.control.layers(baseLayers, overlays).addTo(map);
+        L.control.scale().addTo(map);
+
+        map.attributionControl.setPrefix(
+            '<a href="http://leafletjs.com">Leaflet</a> | Geoportal 304536',
+        );
+    </script>
+</body>
+</html>
